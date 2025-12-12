@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carmyn: Strategic Feasibility & Market Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        /* Custom Scrollbar for clean UI */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .nav-item.active {
+            background-color: #e2e8f0;
+            color: #0f172a;
+            font-weight: 600;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metric-card { transition: transform 0.2s; }
+        .metric-card:hover { transform: translateY(-2px); }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals (Slate/Zinc) with Tech Blue (#3b82f6) and Growth Green (#10b981) accents. -->
+    <!-- Application Structure Plan: Dashboard layout with left sidebar navigation. Selected for density of information. Allows user to jump between financial models, competitor analysis, and future tech without scrolling a long page. -->
+    <!-- Visualization & Content Choices: 
+         1. Financials -> Chart.js Combo Bar/Line -> To show Revenue vs Cash Balance over time -> Toggle Scenarios.
+         2. Competitors -> Chart.js Radar -> To show multi-axis comparison (Tech, Trust, Cost).
+         3. EV Shift -> Interactive HTML Cards -> To compare ICE vs EV inspection points.
+         4. SWOT -> HTML Grid -> Standard matrix for readability.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. 
+    -->
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col h-full overflow-y-auto hidden md:flex">
+        <div class="p-6 border-b border-slate-100">
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">CARMYN<span class="text-blue-500">.</span></h1>
+            <p class="text-xs text-slate-500 mt-1 uppercase tracking-wide">Strategic Intelligence</p>
+        </div>
+        <ul class="flex-1 py-4 space-y-1">
+            <li><button onclick="nav('dashboard')" id="nav-dashboard" class="nav-item active w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors">Executive Summary</button></li>
+            <li><button onclick="nav('market')" id="nav-market" class="nav-item w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors">Market & Competitors</button></li>
+            <li><button onclick="nav('financials')" id="nav-financials" class="nav-item w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors">3-Year Feasibility (US)</button></li>
+            <li><button onclick="nav('gtm')" id="nav-gtm" class="nav-item w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors">GTM & Operations</button></li>
+            <li><button onclick="nav('future')" id="nav-future" class="nav-item w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors">Climate & EV Transition</button></li>
+            <li><button onclick="nav('risks')" id="nav-risks" class="nav-item w-full text-left px-6 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors">Risks & Blind Spots</button></li>
+        </ul>
+        <div class="p-4 border-t border-slate-100">
+            <div class="bg-blue-50 p-3 rounded-lg">
+                <p class="text-xs text-blue-800 font-semibold">Live Simulation</p>
+                <p class="text-[10px] text-blue-600 mt-1">Scenario: Eastern Seaboard Expansion</p>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <div class="md:hidden fixed top-0 w-full bg-white z-50 border-b p-4 flex justify-between items-center">
+        <h1 class="font-bold text-xl">CARMYN.</h1>
+        <select onchange="nav(this.value)" class="bg-slate-100 border-none rounded p-2 text-sm">
+            <option value="dashboard">Executive Summary</option>
+            <option value="market">Market & Competitors</option>
+            <option value="financials">Financial Feasibility</option>
+            <option value="gtm">GTM Strategy</option>
+            <option value="future">Climate & EV</option>
+            <option value="risks">Risks & Blind Spots</option>
+        </select>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 md:pt-8 pt-20 bg-slate-50/50">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="dashboard" class="tab-content active max-w-6xl mx-auto">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-800">Executive Analysis</h2>
+                <p class="text-slate-600 mt-2 max-w-3xl">
+                    Carmyn is positioning itself as a standardized "Source of Truth" in the used vehicle market. By leveraging digital inspections, they aim to reduce friction in B2B (Auction/Dealer) and B2C transactions. This report analyzes the feasibility of a US Eastern Seaboard expansion.
+                </p>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="metric-card bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-xs font-bold text-slate-400 uppercase">Total Addressable Market (US)</div>
+                    <div class="text-2xl font-bold text-slate-800 mt-2">$98B+</div>
+                    <div class="text-xs text-green-600 mt-1">Vehicle Inspection & Data</div>
+                </div>
+                <div class="metric-card bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-xs font-bold text-slate-400 uppercase">Primary Barrier</div>
+                    <div class="text-2xl font-bold text-slate-800 mt-2">Adoption</div>
+                    <div class="text-xs text-orange-600 mt-1">High Dealer Friction</div>
+                </div>
+                <div class="metric-card bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-xs font-bold text-slate-400 uppercase">Break-Even Projection</div>
+                    <div class="text-2xl font-bold text-slate-800 mt-2">Q3 2027</div>
+                    <div class="text-xs text-blue-600 mt-1">Eastern Seaboard Scenario</div>
+                </div>
+                <div class="metric-card bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-xs font-bold text-slate-400 uppercase">Competitive Moat</div>
+                    <div class="text-2xl font-bold text-slate-800 mt-2">Low-Med</div>
+                    <div class="text-xs text-slate-500 mt-1">Dependent on Data/AI scale</div>
+                </div>
+            </div>
+
+            <!-- SWOT Analysis -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- SWOT Grid -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-2">SWOT Analysis</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-3 bg-green-50 rounded border border-green-100">
+                            <h4 class="font-bold text-green-800 text-sm mb-2">Strengths</h4>
+                            <ul class="text-xs text-slate-700 space-y-1 list-disc pl-3">
+                                <li>Digital-first user experience</li>
+                                <li>Cloud-based accessibility</li>
+                                <li>Potential for unbiased standardization</li>
+                            </ul>
+                        </div>
+                        <div class="p-3 bg-red-50 rounded border border-red-100">
+                            <h4 class="font-bold text-red-800 text-sm mb-2">Weaknesses</h4>
+                            <ul class="text-xs text-slate-700 space-y-1 list-disc pl-3">
+                                <li>Lack of brand recognition vs Manheim</li>
+                                <li>Hardware/Staffing rollout costs</li>
+                                <li>Dependence on dealership behavior</li>
+                            </ul>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded border border-blue-100">
+                            <h4 class="font-bold text-blue-800 text-sm mb-2">Opportunities</h4>
+                            <ul class="text-xs text-slate-700 space-y-1 list-disc pl-3">
+                                <li>EV Battery Health Certification</li>
+                                <li>Insurance Claims Integration</li>
+                                <li>Direct-to-Consumer "Certified" Badge</li>
+                            </ul>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded border border-amber-100">
+                            <h4 class="font-bold text-amber-800 text-sm mb-2">Threats</h4>
+                            <ul class="text-xs text-slate-700 space-y-1 list-disc pl-3">
+                                <li>ACV Auctions / UVeye dominance</li>
+                                <li>OEMs creating closed ecosystems</li>
+                                <li>Economic downturn slowing car sales</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Model Breakdown -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-2">Business Model Mechanics</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-indigo-100 text-indigo-700 p-2 rounded text-xs font-bold mr-3 mt-1">B2B</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Dealership SaaS + Transact</h4>
+                                <p class="text-xs text-slate-600 mt-1">Monthly subscription for the platform usage + Per-Inspection fee ($15-$45 avg) for generating certified reports used in trade-ins and sales.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-purple-100 text-purple-700 p-2 rounded text-xs font-bold mr-3 mt-1">API</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Data Licensing</h4>
+                                <p class="text-xs text-slate-600 mt-1">Selling aggregated condition data to insurance, lenders, and pricing guides (KBB/Edmunds integration potential).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-teal-100 text-teal-700 p-2 rounded text-xs font-bold mr-3 mt-1">EV</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800">Future: EV Health Check</h4>
+                                <p class="text-xs text-slate-600 mt-1">Premium tier reports specifically for Battery SOH (State of Health), charging cycles, and degradation analysis.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKET VIEW -->
+        <div id="market" class="tab-content max-w-6xl mx-auto">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-slate-800">Competitive Landscape</h2>
+                <p class="text-slate-600 mt-2">Carmyn enters a crowded but fragmented space. While giants like Manheim dominate the physical auction space, the <i>digital</i> inspection layer is the current battleground. "Trust" is the primary currency.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Competitor Radar Chart -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">Capability Matrix</h3>
+                    <p class="text-xs text-slate-500 mb-4">Comparing Carmyn against market leaders (e.g., ACV Auctions, UVeye, Manheim) on key success factors.</p>
+                    <div class="chart-container">
+                        <canvas id="competitorChart"></canvas>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-500">
+                        <div><span class="w-3 h-3 inline-block rounded-full bg-blue-500 mr-1"></span> Carmyn (Target)</div>
+                        <div><span class="w-3 h-3 inline-block rounded-full bg-slate-300 mr-1"></span> Industry Leader (ACV/Manheim)</div>
+                    </div>
+                </div>
+
+                <!-- Competitor List -->
+                <div class="space-y-4">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 transition hover:shadow-md">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-800">ACV Auctions / True360</h4>
+                            <span class="px-2 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase">Direct Threat</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-2">Dominant in the US dealer-to-dealer market. Their "Audio Motor Profile" (AMP) is a strong moat. Carmyn needs UI superiority to compete here.</p>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 transition hover:shadow-md">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-800">UVeye</h4>
+                            <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-bold rounded uppercase">Tech Leader</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-2">Heavy hardware focus (drive-through scanners). Extremely accurate but high implementation cost. Carmyn's software-first approach is more scalable for smaller dealers.</p>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100 transition hover:shadow-md">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-slate-800">Ravin.ai</h4>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded uppercase">AI Visuals</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-2">Uses standard mobile cameras + AI to detect damage. Very similar value prop to Carmyn. Differentiation will come down to workflow integration speed.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FINANCIALS VIEW -->
+        <div id="financials" class="tab-content max-w-6xl mx-auto">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-800">3-Year Feasibility (US East)</h2>
+                    <p class="text-slate-600 mt-2">Cash flow forecast based on an "Eastern Seaboard" rollout strategy (NY, NJ, PA, FL). Assumes initial capital injection for sales teams.</p>
+                </div>
+                <!-- Scenario Toggle -->
+                <div class="bg-white border border-slate-200 p-1 rounded-lg flex text-sm">
+                    <button id="btn-conservative" onclick="updateFinancials('conservative')" class="px-4 py-2 rounded-md bg-blue-100 text-blue-700 font-medium transition-colors">Conservative</button>
+                    <button id="btn-aggressive" onclick="updateFinancials('aggressive')" class="px-4 py-2 rounded-md text-slate-500 hover:bg-slate-50 transition-colors">Aggressive</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                 <!-- Main Financial Chart -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-lg mb-2 text-slate-800">Revenue vs. Burn Rate</h3>
+                    <div class="chart-container">
+                        <canvas id="financialChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Key Financial Metrics -->
+                <div class="space-y-4">
+                    <div class="bg-white p-5 rounded-xl border border-slate-100">
+                        <div class="text-xs text-slate-400 uppercase font-bold">Projected CAC (Year 1)</div>
+                        <div class="text-2xl font-bold text-slate-800 mt-1" id="cac-display">$2,450</div>
+                        <p class="text-[10px] text-slate-500 mt-2">High initial cost due to "Boots on the Ground" sales requirements for auto dealers.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-100">
+                        <div class="text-xs text-slate-400 uppercase font-bold">Lifetime Value (LTV)</div>
+                        <div class="text-2xl font-bold text-slate-800 mt-1" id="ltv-display">$18,500</div>
+                        <p class="text-[10px] text-slate-500 mt-2">Assumes 24-month retention and 45 inspections/month per dealer rooftop.</p>
+                    </div>
+                    <div class="bg-blue-600 p-5 rounded-xl border border-blue-700 text-white">
+                        <div class="text-xs text-blue-200 uppercase font-bold">Funding Requirement</div>
+                        <div class="text-2xl font-bold mt-1">$4.2M</div>
+                        <p class="text-[10px] text-blue-200 mt-2">Seed/Series A needed to cover Year 1 burn of US expansion team.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GTM VIEW -->
+        <div id="gtm" class="tab-content max-w-6xl mx-auto">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-slate-800">Go-To-Market & Compliance</h2>
+                <p class="text-slate-600 mt-2">Strategy for penetrating the US market, starting with the high-density Eastern Seaboard corridor.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Regional Strategy -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">Phased Rollout: I-95 Corridor</h3>
+                    <div class="relative pl-6 border-l-2 border-slate-200 space-y-8">
+                        <div class="relative">
+                            <div class="absolute -left-[31px] bg-blue-500 h-4 w-4 rounded-full border-4 border-white"></div>
+                            <h4 class="font-bold text-slate-800">Phase 1: Tri-State Area (NY/NJ/PA)</h4>
+                            <p class="text-xs text-slate-600 mt-1">Highest dealer density. Focus on independent dealers who lack enterprise tools. <b>Regulatory Focus:</b> NY "Lemon Laws" and stringent disclosure requirements.</p>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[31px] bg-slate-300 h-4 w-4 rounded-full border-4 border-white"></div>
+                            <h4 class="font-bold text-slate-800">Phase 2: The South (FL/GA/NC)</h4>
+                            <p class="text-xs text-slate-600 mt-1">High volume of lease returns and fleet vehicles. Partner with regional auction houses. <b>Regulatory Focus:</b> Flood damage disclosures (Hurricane risks).</p>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[31px] bg-slate-300 h-4 w-4 rounded-full border-4 border-white"></div>
+                            <h4 class="font-bold text-slate-800">Phase 3: Integration & Scale</h4>
+                            <p class="text-xs text-slate-600 mt-1">Full API integration with major DMS (Dealer Management Systems) like Reynolds & Reynolds or CDK Global.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compliance Checklist -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">Regulatory & Compliance Hurdles</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start bg-slate-50 p-3 rounded">
+                            <span class="text-red-500 font-bold mr-3">⚠</span>
+                            <div class="text-xs text-slate-600">
+                                <strong class="text-slate-800 block">Magnuson-Moss Warranty Act</strong>
+                                Ensure digital reports do not inadvertently create warranties where "As-Is" is intended.
+                            </div>
+                        </li>
+                        <li class="flex items-start bg-slate-50 p-3 rounded">
+                            <span class="text-red-500 font-bold mr-3">⚠</span>
+                            <div class="text-xs text-slate-600">
+                                <strong class="text-slate-800 block">FTC Used Car Rule</strong>
+                                Buyers Guides must be accurate. Carmyn's reports must align perfectly with the window sticker disclosures.
+                            </div>
+                        </li>
+                        <li class="flex items-start bg-slate-50 p-3 rounded">
+                            <span class="text-red-500 font-bold mr-3">⚠</span>
+                            <div class="text-xs text-slate-600">
+                                <strong class="text-slate-800 block">Data Privacy (CCPA/CPRA)</strong>
+                                Even on the East Coast, handling consumer PII (if inspecting customer trade-ins) requires strict data governance.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- FUTURE/CLIMATE VIEW -->
+        <div id="future" class="tab-content max-w-6xl mx-auto">
+            <div class="mb-6">
+                <h2 class="text-3xl font-bold text-slate-800">Climate Tech & The EV Shift</h2>
+                <p class="text-slate-600 mt-2">The transition to EVs fundamentally breaks the traditional vehicle inspection model. This is Carmyn's biggest long-term opportunity (and risk).</p>
+            </div>
+
+            <!-- The Shift Visualization -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div class="bg-white p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase mb-4">Current Reality (ICE Vehicles)</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm p-2 bg-slate-50 rounded">
+                            <span>Engine/Transmission</span>
+                            <span class="font-bold text-slate-700">60% of Value Risk</span>
+                        </div>
+                        <div class="flex justify-between text-sm p-2 bg-slate-50 rounded">
+                            <span>Exhaust/Emissions</span>
+                            <span class="font-bold text-slate-700">Regulatory Compliance</span>
+                        </div>
+                        <div class="flex justify-between text-sm p-2 bg-slate-50 rounded">
+                            <span>Fluids/Leaks</span>
+                            <span class="font-bold text-slate-700">Visual Inspection</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-teal-50 p-6 rounded-xl border border-teal-200 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2 opacity-10 text-9xl">⚡</div>
+                    <h3 class="text-sm font-bold text-teal-700 uppercase mb-4">The Future (EV & Alt Energy)</h3>
+                    <div class="space-y-2 relative z-10">
+                        <div class="flex justify-between text-sm p-2 bg-white/60 rounded backdrop-blur-sm">
+                            <span>Battery SOH (State of Health)</span>
+                            <span class="font-bold text-teal-800">80% of Value Risk</span>
+                        </div>
+                        <div class="flex justify-between text-sm p-2 bg-white/60 rounded backdrop-blur-sm">
+                            <span>Software/Firmware</span>
+                            <span class="font-bold text-teal-800">OTA Update Versioning</span>
+                        </div>
+                        <div class="flex justify-between text-sm p-2 bg-white/60 rounded backdrop-blur-sm">
+                            <span>Solar/Hydrogen Integrity</span>
+                            <span class="font-bold text-teal-800">New Safety Protocols</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-8">
+                <h3 class="font-bold text-lg mb-2 text-slate-800">Long-Term Plays: Solar & Hydrogen</h3>
+                <p class="text-sm text-slate-600 mb-4">As the industry fragments into BEV (Battery), FCEV (Hydrogen), and Solar-Assisted vehicles, inspection complexity increases.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-4 border border-slate-200 rounded-lg">
+                        <h4 class="font-bold text-slate-800 text-sm">Solar Roof Efficiency</h4>
+                        <p class="text-xs text-slate-500 mt-1">Micro-cracks in solar skins (like on Fisker Ocean or Aptera) drastically reduce range. Visual AI is needed to detect these specific defects.</p>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded-lg">
+                        <h4 class="font-bold text-slate-800 text-sm">Hydrogen Tanks</h4>
+                        <p class="text-xs text-slate-500 mt-1">High-pressure tank integrity checks will move from industrial settings to consumer inspections. Safety compliance is the #1 value prop here.</p>
+                    </div>
+                    <div class="p-4 border border-slate-200 rounded-lg">
+                        <h4 class="font-bold text-slate-800 text-sm">Grid Integration</h4>
+                        <p class="text-xs text-slate-500 mt-1">V2G (Vehicle to Grid) capability verification. Does the car actually feed back to the grid as promised? A new metric for value.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RISKS VIEW -->
+        <div id="risks" class="tab-content max-w-6xl mx-auto">
+             <div class="mb-6">
+                <h2 class="text-3xl font-bold text-slate-800">The 5 Blind Spots</h2>
+                <p class="text-slate-600 mt-2">Additional critical research factors often overlooked in standard feasibility studies.</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+                <div class="bg-white p-5 border-l-4 border-amber-400 rounded shadow-sm">
+                    <h3 class="font-bold text-slate-800">1. The "Repo" Tsunami</h3>
+                    <p class="text-sm text-slate-600 mt-1">If the US economy softens, repossession volumes spike. Banks need quick, cheap, trustworthy condition reports to liquidate assets at auction. Can Carmyn scale specifically for the Repossession Recovery industry?</p>
+                </div>
+                <div class="bg-white p-5 border-l-4 border-amber-400 rounded shadow-sm">
+                    <h3 class="font-bold text-slate-800">2. OBD-III Data Access Wars</h3>
+                    <p class="text-sm text-slate-600 mt-1">OEMs are locking down the OBD port data. If Carmyn relies on plugging into the car for data, they are at the mercy of GM/Ford/Tesla allowing access. They need a "Right to Repair" strategy.</p>
+                </div>
+                <div class="bg-white p-5 border-l-4 border-amber-400 rounded shadow-sm">
+                    <h3 class="font-bold text-slate-800">3. The Technician Shortage</h3>
+                    <p class="text-sm text-slate-600 mt-1">Even digital tools need a human operator. The US has a massive shortage of automotive techs. Carmyn's UI must be simple enough for a gig-worker or lot attendant, not just a master mechanic.</p>
+                </div>
+                <div class="bg-white p-5 border-l-4 border-amber-400 rounded shadow-sm">
+                    <h3 class="font-bold text-slate-800">4. Fraud Sophistication</h3>
+                    <p class="text-sm text-slate-600 mt-1">Digital odometers can be rolled back; software can mask battery issues. Carmyn needs "Digital Forensics" capabilities, not just visual inspection.</p>
+                </div>
+                <div class="bg-white p-5 border-l-4 border-amber-400 rounded shadow-sm">
+                    <h3 class="font-bold text-slate-800">5. Ride-Share Fleet Cycles</h3>
+                    <p class="text-sm text-slate-600 mt-1">Uber/Lyft cars age in "dog years." A dedicated inspection module for high-mileage interior wear (vomit, tears, smoke) specifically for TNC (Transportation Network Company) fleets could be a niche entry point.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- DATA STORAGE ---
+        // Financial Data Scenarios
+        const financialData = {
+            conservative: {
+                labels: ['Y1 Q1', 'Y1 Q2', 'Y1 Q3', 'Y1 Q4', 'Y2 Q1', 'Y2 Q2', 'Y2 Q3', 'Y2 Q4', 'Y3 Q1', 'Y3 Q2', 'Y3 Q3', 'Y3 Q4'],
+                revenue: [50, 80, 120, 180, 250, 320, 400, 500, 650, 800, 950, 1100], // In Thousands
+                burn:    [400, 400, 420, 450, 500, 550, 600, 650, 700, 750, 800, 850],
+                cash:    [4000, 3650, 3350, 2980, 2630, 2200, 1800, 1450, 1300, 1250, 1300, 1450] // Cash Balance
+            },
+            aggressive: {
+                labels: ['Y1 Q1', 'Y1 Q2', 'Y1 Q3', 'Y1 Q4', 'Y2 Q1', 'Y2 Q2', 'Y2 Q3', 'Y2 Q4', 'Y3 Q1', 'Y3 Q2', 'Y3 Q3', 'Y3 Q4'],
+                revenue: [80, 150, 300, 500, 800, 1200, 1800, 2500, 3500, 4800, 6200, 8000],
+                burn:    [600, 700, 850, 1000, 1200, 1500, 1800, 2000, 2200, 2500, 2800, 3000],
+                cash:    [5000, 4480, 3930, 3430, 3030, 2730, 2730, 3230, 4530, 6830, 10230, 15230]
+            }
+        };
+
+        // --- CHART INSTANCES ---
+        let competitorChartInstance = null;
+        let financialChartInstance = null;
+
+        // --- NAVIGATION LOGIC ---
+        function nav(tabId) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tabId).classList.add('active');
+            
+            // Update sidebar active state (desktop)
+            const navBtn = document.getElementById(`nav-${tabId}`);
+            if (navBtn) navBtn.classList.add('active');
+
+            // Trigger chart renders if visible
+            if (tabId === 'market') renderCompetitorChart();
+            if (tabId === 'financials') updateFinancials('conservative');
+        }
+
+        // --- VISUALIZATION: COMPETITOR RADAR ---
+        function renderCompetitorChart() {
+            const ctx = document.getElementById('competitorChart').getContext('2d');
+            
+            if (competitorChartInstance) competitorChartInstance.destroy();
+
+            competitorChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Technology Stack', 'Dealer Trust', 'Market Share', 'Cost Efficiency', 'Ease of Use', 'EV Readiness'],
+                    datasets: [{
+                        label: 'Carmyn',
+                        data: [85, 60, 20, 90, 88, 75],
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                        borderColor: 'rgb(59, 130, 246)',
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(59, 130, 246)'
+                    }, {
+                        label: 'Industry Avg (Manheim/ACV)',
+                        data: [70, 90, 95, 60, 65, 50],
+                        fill: true,
+                        backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                        borderColor: 'rgb(148, 163, 184)',
+                        pointBackgroundColor: 'rgb(148, 163, 184)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgb(148, 163, 184)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: { line: { borderWidth: 3 } },
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: {
+                                font: { size: 10, family: "'Inter', sans-serif" },
+                                color: '#64748b'
+                            },
+                            ticks: { display: false, max: 100 }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { font: { family: "'Inter', sans-serif" } } }
+                    }
+                }
+            });
+        }
+
+        // --- VISUALIZATION: FINANCIALS ---
+        function updateFinancials(scenario) {
+            // Update button styles
+            document.getElementById('btn-conservative').classList.remove('bg-blue-100', 'text-blue-700', 'font-medium');
+            document.getElementById('btn-conservative').classList.add('text-slate-500');
+            document.getElementById('btn-aggressive').classList.remove('bg-blue-100', 'text-blue-700', 'font-medium');
+            document.getElementById('btn-aggressive').classList.add('text-slate-500');
+
+            document.getElementById(`btn-${scenario}`).classList.add('bg-blue-100', 'text-blue-700', 'font-medium');
+            document.getElementById(`btn-${scenario}`).classList.remove('text-slate-500');
+
+            // Update Metric Text
+            if (scenario === 'aggressive') {
+                document.getElementById('cac-display').innerText = "$3,100";
+                document.getElementById('ltv-display').innerText = "$22,400";
+            } else {
+                document.getElementById('cac-display').innerText = "$2,450";
+                document.getElementById('ltv-display').innerText = "$18,500";
+            }
+
+            // Render Chart
+            const ctx = document.getElementById('financialChart').getContext('2d');
+            const data = financialData[scenario];
+
+            if (financialChartInstance) financialChartInstance.destroy();
+
+            financialChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: 'Cash Balance ($K)',
+                            data: data.cash,
+                            borderColor: '#10b981',
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y1',
+                            tension: 0.4
+                        },
+                        {
+                            type: 'bar',
+                            label: 'Projected Revenue ($K)',
+                            data: data.revenue,
+                            backgroundColor: '#3b82f6',
+                            yAxisID: 'y',
+                            borderRadius: 4
+                        },
+                        {
+                            type: 'bar',
+                            label: 'OpEx Burn ($K)',
+                            data: data.burn,
+                            backgroundColor: '#cbd5e1',
+                            yAxisID: 'y',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            grid: { display: false },
+                            title: { display: true, text: 'Monthly Flow ($K)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { color: '#f1f5f9' },
+                            title: { display: true, text: 'Cash Balance ($K)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            backgroundColor: '#1e293b',
+                            padding: 12,
+                            titleFont: { size: 13 },
+                            bodyFont: { size: 12 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize default view
+        window.onload = function() {
+            // Check for mobile resize events to adjust chart container
+            window.addEventListener('resize', () => {
+                if(competitorChartInstance) competitorChartInstance.resize();
+                if(financialChartInstance) financialChartInstance.resize();
+            });
+        };
+
+    </script>
+</body>
+</html>
